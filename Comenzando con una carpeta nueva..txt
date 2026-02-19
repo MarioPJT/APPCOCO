@@ -1,0 +1,48 @@
+Comenzando con una carpeta nueva.
+
+Primero ponemos 
+git init
+
+segundo 
+git status
+
+tercero 
+git add . -para subir los archivos
+git add Nombre del archivo
+
+cuarto
+git commit -m "VA un mensaje "
+
+quiento
+git config --global user.email majhoss952@gmail.com
+git config --global user.name MarioPJT
+
+sexto
+git branch -M main
+
+septimo
+copiar y pegar el git remote add origin http
+
+obtavo
+git push -u origin main
+
+Para Segir guardando los commit
+
+primero
+git status
+
+segundo
+git add .
+
+tercero
+git commit -m "La palabra clave"
+
+cuarto 
+git push -u origin main
+
+QUinto 
+git log
+los commit realizados sobre el proyecto
+
+sexto
+
