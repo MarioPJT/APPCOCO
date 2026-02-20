@@ -1,77 +1,86 @@
 import tkinter as tk
-from tkinter import messagebox
-from datetime import datetime
+from tkinter import ttk, messagebox
 import mysql.connector
+from styles import aplicar_estilo
+from excel import generar_excel
+from historial import abrir_historial
 
-# Conexión MySQL
-def conectar_db():
-    return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",  # En XAMPP normalmente está vacío
-        database="puesto_comida"
-    )
+# =========================
+# FUNCIÓN PARA GUARDAR
+# =========================
 
-def guardar_datos():
+def guardar_movimiento():
+    descripcion = entrada_descripcion.get()
+    monto = entrada_monto.get()
+    categoria = combo_categoria.get()
+
+    if descripcion == "" or monto == "":
+        messagebox.showwarning("Error", "Todos los campos son obligatorios")
+        return
+
     try:
-        ventas = float(entry_ventas.get())
-        gastos = float(entry_gastos.get())
-        ganancia = ventas - gastos
-        fecha = datetime.now().date()
+        conexion = mysql.connector.connect(
+            host="localhost",
+            user="root",
+            password="",
+            database="puesto_comida"
+        )
 
-        conexion = conectar_db()
         cursor = conexion.cursor()
 
-        sql = "INSERT INTO registros (fecha, ventas, gastos, ganancia) VALUES (%s, %s, %s, %s)"
-        valores = (fecha, ventas, gastos, ganancia)
+        sql = "INSERT INTO registros (fecha, tipo, categoria, descripcion, monto) VALUES (NOW(), 'Gasto', %s, %s, %s)"
+        valores = (categoria, descripcion, monto)
 
         cursor.execute(sql, valores)
         conexion.commit()
 
-        cursor.close()
         conexion.close()
 
-        label_resultado.config(text=f"Ganancia del día: ${ganancia:,.0f}")
-        messagebox.showinfo("Éxito", "Datos guardados en la base de datos")
+        messagebox.showinfo("Éxito", "Movimiento guardado correctamente")
 
-        entry_ventas.delete(0, tk.END)
-        entry_gastos.delete(0, tk.END)
+        entrada_descripcion.delete(0, tk.END)
+        entrada_monto.delete(0, tk.END)
 
     except Exception as e:
-        messagebox.showerror("Error", f"Ocurrió un error:\n{e}")
+        messagebox.showerror("Error", str(e))
 
-# Ventana principal
-ventana = tk.Tk()
-ventana.title("Control Puesto de Comida 🍔")
-ventana.geometry("400x350")
-ventana.configure(bg="#f4f4f4")
 
-titulo = tk.Label(ventana, text="Registro Diario", font=("Arial", 18, "bold"), bg="#f4f4f4")
-titulo.pack(pady=20)
+# =========================
+# VENTANA PRINCIPAL
+# =========================
 
-tk.Label(ventana, text="Ventas del día ($)", bg="#f4f4f4").pack()
-entry_ventas = tk.Entry(ventana)
-entry_ventas.pack(pady=5)
+root = tk.Tk()
+root.title("Puesto de Comida")
+root.geometry("500x500")
 
-tk.Label(ventana, text="Gastos del día ($)", bg="#f4f4f4").pack()
-entry_gastos = tk.Entry(ventana)
-entry_gastos.pack(pady=5)
+aplicar_estilo()
 
-btn_guardar = tk.Button(
-    ventana,
-    text="Guardar",
-    bg="#ff6b00",
-    fg="white",
-    command=guardar_datos
-)
-btn_guardar.pack(pady=15)
+# =========================
+# CAMPOS DE ENTRADA
+# =========================
 
-label_resultado = tk.Label(
-    ventana,
-    text="Ganancia del día: $0",
-    font=("Arial", 12),
-    bg="#f4f4f4"
-)
-label_resultado.pack(pady=10)
+ttk.Label(root, text="Descripción").pack()
+entrada_descripcion = ttk.Entry(root)
+entrada_descripcion.pack()
 
-ventana.mainloop()
+ttk.Label(root, text="Monto").pack()
+entrada_monto = ttk.Entry(root)
+entrada_monto.pack()
+
+ttk.Label(root, text="Categoría").pack()
+categorias = ["Insumos", "Gas", "Renta", "Luz", "Transporte", "Otros"]
+combo_categoria = ttk.Combobox(root, values=categorias)
+combo_categoria.pack()
+combo_categoria.current(0)  # Selecciona la primera opción
+
+# Botón Guardar
+ttk.Button(root, text="Guardar Movimiento", command=guardar_movimiento).pack(pady=10)
+
+# =========================
+# BOTONES EXTRA
+# =========================
+
+ttk.Button(root, text="Generar Excel", command=generar_excel).pack(pady=5)
+ttk.Button(root, text="Ver Historial", command=abrir_historial).pack(pady=5)
+
+root.mainloop()
