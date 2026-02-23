@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import mysql.connector
 import matplotlib.pyplot as plt
+from cierres import guardar_cierre_dia, ver_historial_cierres
 
 # 🔄 ACTUALIZADO: imports para PDF profesional
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
@@ -13,9 +14,10 @@ from datetime import datetime
 
 def abrir_caja():
 
-    ventana = tk.Toplevel()
+    ventana = tk.Toplevel()   # 👈 PRIMERO SE CREA
     ventana.title("Control de Caja")
-    ventana.geometry("900x650")  # 🔄 ACTUALIZADO tamaño mejorado
+    ventana.geometry("900x650")
+
 
     # =========================
     # CONEXIÓN BD
@@ -180,6 +182,44 @@ def abrir_caja():
         cargar_datos()
 
     # =========================
+    # 🛒 COMPRA RÁPIDA (NUEVO)
+    # =========================
+
+    def compra_rapida():
+
+        descripcion = entrada_descripcion.get()
+        monto = entrada_monto.get()
+
+        if descripcion == "" or monto == "":
+            messagebox.showwarning("Error", "Ingrese descripción y monto")
+            return
+
+        try:
+            monto = float(monto)
+        except:
+            messagebox.showerror("Error", "El monto debe ser numérico")
+            return
+
+        conexion = conectar()
+        cursor = conexion.cursor()
+
+        # 🔄 ACTUALIZADO: Siempre será Egreso en Efectivo
+        cursor.execute("""
+            INSERT INTO caja (tipo, metodo, descripcion, monto)
+            VALUES (%s, %s, %s, %s)
+        """, ("Egreso", "Efectivo", f"Compra rápida: {descripcion}", monto))
+
+        conexion.commit()
+        conexion.close()
+
+        entrada_descripcion.delete(0, tk.END)
+        entrada_monto.delete(0, tk.END)
+
+        cargar_datos()
+
+        messagebox.showinfo("Compra Registrada", "Compra rápida descontada de la caja")
+
+    # =========================
     # GRÁFICA
     # =========================
 
@@ -282,7 +322,10 @@ def abrir_caja():
     # =========================
 
     ttk.Button(ventana, text="Registrar Movimiento", command=guardar_movimiento).pack(pady=5)
+    ttk.Button(ventana, text="Compra Rápida 🛒", command=compra_rapida).pack(pady=5)
     ttk.Button(ventana, text="Ver Gráfica", command=mostrar_grafica).pack(pady=5)
     ttk.Button(ventana, text="Generar PDF", command=generar_pdf).pack(pady=5)
+    ttk.Button(ventana, text="🔐 Guardar Cierre del Día", command=guardar_cierre_dia).pack(pady=5)
+    ttk.Button(ventana, text="📊 Ver Historial Cierres", command=ver_historial_cierres).pack(pady=5)
 
     cargar_datos()
